@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #fef5ea;
+  --bg-2: #e3f2ff;
+  --ink: #0d1b24;
+  --muted: #5a6a74;
+  --accent: #ff6b4a;
+  --accent-2: #2a8d8c;
+  --card: #ffffff;
+  --line: #e3e8ee;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-space-grotesk);
+  --font-display: var(--font-fraunces);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui;
+  color: var(--ink);
+  background: linear-gradient(160deg, var(--bg) 0%, #ffffff 45%, var(--bg-2) 100%);
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-fraunces), "Playfair Display", serif;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+body::before {
+  background:
+    radial-gradient(1200px 800px at 10% -10%, rgba(255, 196, 168, 0.6), transparent 60%),
+    radial-gradient(900px 700px at 110% 20%, rgba(148, 207, 255, 0.4), transparent 55%);
+}
+
+body::after {
+  background-image: repeating-linear-gradient(
+      120deg,
+      rgba(13, 27, 36, 0.04),
+      rgba(13, 27, 36, 0.04) 1px,
+      transparent 1px,
+      transparent 18px
+    );
+  opacity: 0.7;
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

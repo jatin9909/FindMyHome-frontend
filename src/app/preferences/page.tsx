@@ -28,6 +28,8 @@ type FormState = {
 
 type Status = { type: "success" | "error" | "info"; message: string } | null;
 
+type NumericField = "minPrice" | "maxPrice" | "minArea" | "maxArea";
+
 const CITY_OPTIONS = [
   "Thane",
   "Bangalore",
@@ -185,7 +187,7 @@ export default function PreferencesPage() {
     return "";
   };
 
-  const updateFieldWarning = (name: string, value: string) => {
+  const updateFieldWarning = (name: NumericField, value: string) => {
     const numeric = parseValue(value);
     let warning = "";
     if (numeric === null) {
@@ -205,7 +207,7 @@ export default function PreferencesPage() {
     setFieldWarnings((prev) => ({ ...prev, [name]: warning }));
   };
 
-  const clampValue = (name: string, value: string) => {
+  const clampValue = (name: NumericField, value: string) => {
     const numeric = parseValue(value);
     if (numeric === null) return value;
     if (name === "minPrice" || name === "maxPrice") {
@@ -219,7 +221,7 @@ export default function PreferencesPage() {
     return value;
   };
 
-  const handleNumberChange = (name: keyof FormState) => {
+  const handleNumberChange = (name: NumericField) => {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
       const raw = event.target.value;
       if (!/^[0-9]*$/.test(raw)) return;
@@ -228,7 +230,7 @@ export default function PreferencesPage() {
     };
   };
 
-  const handleNumberBlur = (name: keyof FormState) => {
+  const handleNumberBlur = (name: NumericField) => {
     return () => {
       setForm((prev) => {
         const next = clampValue(name, prev[name]);

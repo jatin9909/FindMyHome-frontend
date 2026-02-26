@@ -149,11 +149,17 @@ export default function ChatPage() {
       setActiveTurn(-1);
       return;
     }
-    const lastTurn = turnLog[turnLog.length - 1];
-    const hasProps =
-      Array.isArray(lastTurn?.recommended_properties) &&
-      lastTurn.recommended_properties.length > 0;
-    setActiveTurn(hasProps ? turnLog.length - 1 : -1);
+    for (let index = turnLog.length - 1; index >= 0; index -= 1) {
+      const turn = turnLog[index];
+      if (
+        Array.isArray(turn?.recommended_properties) &&
+        turn.recommended_properties.length > 0
+      ) {
+        setActiveTurn(index);
+        return;
+      }
+    }
+    setActiveTurn(-1);
   }, [turnLog]);
 
   useEffect(() => {
@@ -272,7 +278,7 @@ export default function ChatPage() {
     const optimistic: TurnLog = {
       question: userMessage,
       answer: "",
-      recommended_properties: properties,
+      recommended_properties: [],
     };
     setTurnLog((prev) => [...prev, optimistic]);
 

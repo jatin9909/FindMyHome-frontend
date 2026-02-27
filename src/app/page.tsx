@@ -9,6 +9,7 @@ type Panel = "request" | "signup" | "login";
 type StatusType = "success" | "info" | "warning" | "error";
 
 type Status = { type: StatusType; message: string } | null;
+type LoadingAction = "request" | "check" | "signup" | "login" | null;
 
 export default function Home() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<LoadingAction>(null);
   const [showCheckStatus, setShowCheckStatus] = useState(false);
 
   useEffect(() => {
@@ -103,7 +105,10 @@ export default function Home() {
     setStatus({ type: "error", message: detail });
   };
 
-  const handleRequest = async (event: React.FormEvent) => {
+  const handleRequest = async (
+    event: React.SyntheticEvent,
+    action: LoadingAction = "request"
+  ) => {
     event.preventDefault();
     setStatus(null);
     if (!email.trim()) {
@@ -111,6 +116,7 @@ export default function Home() {
       return;
     }
     setLoading(true);
+    setLoadingAction(action);
     try {
       const payload: { email: string; reason?: string } = { email: email.trim() };
       if (reason.trim()) {
@@ -131,6 +137,7 @@ export default function Home() {
       );
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   };
 
@@ -150,6 +157,7 @@ export default function Home() {
       return;
     }
     setLoading(true);
+    setLoadingAction("signup");
     try {
       const data = await apiFetch<{ message: string }>("/signup", {
         method: "POST",
@@ -166,6 +174,7 @@ export default function Home() {
       });
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   };
 
@@ -181,6 +190,7 @@ export default function Home() {
       return;
     }
     setLoading(true);
+    setLoadingAction("login");
     try {
       const data = await apiFetch<{ access_token: string }>("/login", {
         method: "POST",
@@ -214,6 +224,7 @@ export default function Home() {
       });
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   };
 
@@ -299,6 +310,7 @@ export default function Home() {
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  disabled={loading}
                   required
                 />
               </label>
@@ -309,30 +321,45 @@ export default function Home() {
                   rows={3}
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
+                  disabled={loading}
                 />
               </label>
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="flex-1 rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(13,27,36,0.2)] transition hover:translate-y-[-1px]"
+                  className="flex-1 rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(13,27,36,0.2)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:hover:translate-y-0"
                   type="submit"
                   disabled={loading}
+                  aria-busy={loadingAction === "request"}
                 >
-                  Request access
+                  <span className="flex items-center justify-center gap-2">
+                    {loadingAction === "request" && (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    )}
+                    {loadingAction === "request" ? "Requesting..." : "Request access"}
+                  </span>
                 </button>
                 {showCheckStatus && (
                   <button
                     type="button"
-                    onClick={handleRequest}
-                    className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)]"
+                    onClick={(event) => handleRequest(event, "check")}
+                    className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={loading}
+                    aria-busy={loadingAction === "check"}
                   >
-                    Check status
+                    <span className="flex items-center justify-center gap-2">
+                      {loadingAction === "check" && (
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[rgba(13,27,36,0.25)] border-t-[var(--ink)]" />
+                      )}
+                      {loadingAction === "check" ? "Checking..." : "Check status"}
+                    </span>
                   </button>
                 )}
               </div>
               <button
                 type="button"
                 onClick={() => setPanel("login")}
-                className="text-left text-sm text-[var(--accent-2)] hover:underline"
+                className="text-left text-sm text-[var(--accent-2)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+                disabled={loading}
               >
                 Already have access? Go to login
               </button>
@@ -348,6 +375,7 @@ export default function Home() {
                   type="email"
                   value={email}
                   readOnly
+                  disabled={loading}
                 />
               </label>
               <label className="block text-sm text-[var(--muted)]">
@@ -357,6 +385,7 @@ export default function Home() {
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  disabled={loading}
                   required
                 />
               </label>
@@ -367,21 +396,29 @@ export default function Home() {
                   type="password"
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
+                  disabled={loading}
                   required
                 />
               </label>
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="flex-1 rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(13,27,36,0.2)] transition hover:translate-y-[-1px]"
+                  className="flex-1 rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(13,27,36,0.2)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:hover:translate-y-0"
                   type="submit"
                   disabled={loading}
+                  aria-busy={loadingAction === "signup"}
                 >
-                  Create account
+                  <span className="flex items-center justify-center gap-2">
+                    {loadingAction === "signup" && (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    )}
+                    {loadingAction === "signup" ? "Creating..." : "Create account"}
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setPanel("request")}
-                  className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)]"
+                  className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={loading}
                 >
                   Change email
                 </button>
@@ -398,6 +435,7 @@ export default function Home() {
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  disabled={loading}
                   required
                 />
               </label>
@@ -408,21 +446,29 @@ export default function Home() {
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  disabled={loading}
                   required
                 />
               </label>
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="flex-1 rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(13,27,36,0.2)] transition hover:translate-y-[-1px]"
+                  className="flex-1 rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(13,27,36,0.2)] transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:hover:translate-y-0"
                   type="submit"
                   disabled={loading}
+                  aria-busy={loadingAction === "login"}
                 >
-                  Log in
+                  <span className="flex items-center justify-center gap-2">
+                    {loadingAction === "login" && (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    )}
+                    {loadingAction === "login" ? "Logging in..." : "Log in"}
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setPanel("request")}
-                  className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)]"
+                  className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={loading}
                 >
                   Change email
                 </button>

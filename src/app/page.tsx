@@ -21,7 +21,6 @@ export default function Home() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState<LoadingAction>(null);
-  const [showCheckStatus, setShowCheckStatus] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -90,7 +89,6 @@ export default function Home() {
         type: "info",
         message: "Your request is still under review. Check again later.",
       });
-      setShowCheckStatus(true);
       return;
     }
 
@@ -119,18 +117,21 @@ export default function Home() {
     setLoadingAction(action);
     try {
       const payload: { email: string; reason?: string } = { email: email.trim() };
-      if (reason.trim()) {
+      if (action !== "check" && reason.trim()) {
         payload.reason = reason.trim();
       }
       const data = await apiFetch<{ message: string }>("/request-approval", {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      const successMessage =
+        action === "check"
+          ? data.message
+          : `${data.message}. We will notify you after approval.`;
       setStatus({
         type: "success",
-        message: `${data.message}. We will notify you after approval.`,
+        message: successMessage,
       });
-      setShowCheckStatus(true);
     } catch (error) {
       handleApprovalError(
         error instanceof Error ? error.message : "Request failed."
@@ -338,22 +339,20 @@ export default function Home() {
                     {loadingAction === "request" ? "Requesting..." : "Request access"}
                   </span>
                 </button>
-                {showCheckStatus && (
-                  <button
-                    type="button"
-                    onClick={(event) => handleRequest(event, "check")}
-                    className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)] transition disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={loading}
-                    aria-busy={loadingAction === "check"}
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      {loadingAction === "check" && (
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[rgba(13,27,36,0.25)] border-t-[var(--ink)]" />
-                      )}
-                      {loadingAction === "check" ? "Checking..." : "Check status"}
-                    </span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={(event) => handleRequest(event, "check")}
+                  className="flex-1 rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold text-[var(--ink)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={loading}
+                  aria-busy={loadingAction === "check"}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    {loadingAction === "check" && (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[rgba(13,27,36,0.25)] border-t-[var(--ink)]" />
+                    )}
+                    {loadingAction === "check" ? "Checking..." : "Check access"}
+                  </span>
+                </button>
               </div>
               <button
                 type="button"
